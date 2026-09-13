@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minutnik klasowy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root{
+    --bg-deep:      #1F3D33;
+    --bg-panel:     #24463A;
+    --sand:         #E8A33D;
+    --sand-light:   #F4C775;
+    --coral:        #E8654E;
+    --cream:        #F5EFE0;
+    --cream-dim:    #C9D6CD;
+    --glass-line:   #7FA294;
+    --focus-ring:   #9FD6C4;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; height:100%;
+  }
+
+  body{
+    font-family:'Nunito', sans-serif;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(255,255,255,0.05), transparent 55%),
+      var(--bg-deep);
+    color: var(--cream);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 28px 18px;
+  }
+
+  .stage{
+    width:100%;
+    max-width: 560px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 18px;
+  }
+
+  .eyebrow{
+    font-size: 0.95rem;
+    color: var(--cream-dim);
+    letter-spacing: 0.01em;
+  }
+
+  /* --- Hourglass --- */
+  .glass-wrap{
+    position:relative;
+    width: min(66vw, 260px);
+  }
+
+  .glass-wrap svg{ width:100%; height:auto; display:block; }
+
+  .glow{
+    position:absolute; inset:-20px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(232,163,61,0.35), transparent 65%);
+    opacity:0;
+    transition: opacity .6s ease;
+    pointer-events:none;
+  }
+  .glow.active{ opacity:1; animation: pulse 1.4s ease-in-out infinite; }
+
+  @keyframes pulse{
+    0%,100%{ transform: scale(1); opacity:.55; }
+    50%{ transform: scale(1.12); opacity:.9; }
+  }
+
+  .sand-fall{
+    transform-origin: 100px 155px;
+  }
+  .sand-fall rect{
+    animation: fall 0.5s linear infinite;
+  }
+  @keyframes fall{
+    0%{ transform: translateY(0); opacity:1; }
+    100%{ transform: translateY(9px); opacity:0.4; }
+  }
+
+  /* --- Big time readout --- */
+  .readout{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size: clamp(3rem, 14vw, 4.6rem);
+    line-height:1;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status{
+    font-size: 1.05rem;
+    color: var(--sand-light);
+    min-height: 1.4em;
+    text-align:center;
+  }
+
+  /* --- Presets --- */
+  .presets{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+  }
+
+  .chip{
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size: 1.02rem;
+    color: var(--cream);
+    background: var(--bg-panel);
+    border: 2px solid var(--glass-line);
+    border-radius: 999px;
+    padding: 10px 18px;
+    cursor:pointer;
+    transition: background .15s ease, transform .1s ease, border-color .15s ease;
+  }
+  .chip:hover{ border-color: var(--sand); }
+  .chip:active{ transform: scale(0.96); }
+  .chip.selected{
+    background: var(--sand);
+    border-color: var(--sand);
+    color: #23301E;
+  }
+
+  /* --- Custom time --- */
+  .custom-row{
+    display:flex;
+    align-items:center;
+    gap: 14px;
+    background: var(--bg-panel);
+    border: 2px solid var(--glass-line);
+    border-radius: 18px;
+    padding: 10px 16px;
+  }
+
+  .field{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+  }
+  .field label{
+    font-size:0.8rem;
+    color: var(--cream-dim);
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .stepper button{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:none;
+    background: var(--bg-deep);
+    color: var(--cream);
+    font-size:1.2rem;
+    font-weight:800;
+    cursor:pointer;
+    line-height:1;
+  }
+  .stepper button:hover{ background:#173028; }
+  .stepper span{
+    font-family:'Baloo 2', sans-serif;
+    font-size:1.3rem;
+    min-width: 2.2ch;
+    text-align:center;
+  }
+
+  /* --- Controls --- */
+  .controls{
+    display:flex;
+    gap:14px;
+    margin-top:4px;
+  }
+
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size: 1.25rem;
+    border:none;
+    border-radius: 16px;
+    padding: 16px 30px;
+    cursor:pointer;
+    transition: transform .1s ease, filter .15s ease;
+  }
+  .btn:active{ transform: scale(0.97); }
+
+  .btn-primary{
+    background: var(--sand);
+    color: #23301E;
+  }
+  .btn-primary:hover{ filter: brightness(1.08); }
+
+  .btn-secondary{
+    background: transparent;
+    color: var(--cream);
+    border: 2px solid var(--glass-line);
+  }
+  .btn-secondary:hover{ border-color: var(--coral); color: var(--coral); }
+
+  button:focus-visible, .chip:focus-visible{
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sand-fall rect{ animation: none; }
+    .glow.active{ animation: none; opacity:.7; }
+  }
+
+  @media (max-width: 380px){
+    .custom-row{ flex-direction:column; gap:10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="eyebrow">Minutnik dla klasy</div>
+
+  <div class="glass-wrap">
+    <div class="glow" id="glow"></div>
+    <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+      <!-- frame caps -->
+      <rect x="18" y="8" width="164" height="12" rx="6" fill="#173028"/>
+      <rect x="18" y="280" width="164" height="12" rx="6" fill="#173028"/>
+
+      <!-- sand fill (drawn under the glass outline) -->
+      <clipPath id="topClip">
+        <path d="M30,20 L170,20 L100,150 Z"/>
+      </clipPath>
+      <clipPath id="bottomClip">
+        <path d="M100,150 L170,280 L30,280 Z"/>
+      </clipPath>
+
+      <g clip-path="url(#topClip)">
+        <rect id="sandTop" x="20" y="20" width="160" height="130" fill="var(--sand)"/>
+      </g>
+      <g clip-path="url(#bottomClip)">
+        <rect id="sandBottom" x="20" y="280" width="160" height="0" fill="var(--sand)"/>
+      </g>
+
+      <!-- falling stream -->
+      <g class="sand-fall" id="sandFall" style="opacity:0">
+        <rect x="98.5" y="150" width="3" height="10" fill="var(--sand-light)"/>
+      </g>
+
+      <!-- glass outline -->
+      <path d="M30,20 L170,20 L100,150 L170,280 L30,280 L100,150 Z"
+            fill="none" stroke="var(--glass-line)" stroke-width="4"
+            stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="readout" id="readout">05:00</div>
+  <div class="status" id="status">Ustaw czas i naciśnij Start</div>
+
+  <div class="presets" id="presets">
+    <button class="chip" data-sec="60">1 min</button>
+    <button class="chip" data-sec="120">2 min</button>
+    <button class="chip selected" data-sec="300">5 min</button>
+    <button class="chip" data-sec="600">10 min</button>
+    <button class="chip" data-sec="900">15 min</button>
+    <button class="chip" data-sec="1200">20 min</button>
+  </div>
+
+  <div class="custom-row">
+    <div class="field">
+      <label for="minVal">minuty</label>
+      <div class="stepper">
+        <button type="button" id="minDown" aria-label="Mniej minut">−</button>
+        <span id="minVal">5</span>
+        <button type="button" id="minUp" aria-label="Więcej minut">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="secVal">sekundy</label>
+      <div class="stepper">
+        <button type="button" id="secDown" aria-label="Mniej sekund">−</button>
+        <span id="secVal">0</span>
+        <button type="button" id="secUp" aria-label="Więcej sekund">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="startBtn">Start</button>
+    <button class="btn btn-secondary" id="resetBtn">Od nowa</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const readout   = document.getElementById('readout');
+  const statusEl  = document.getElementById('status');
+  const startBtn  = document.getElementById('startBtn');
+  const resetBtn  = document.getElementById('resetBtn');
+  const presets   = document.getElementById('presets');
+  const glow      = document.getElementById('glow');
+  const sandFall  = document.getElementById('sandFall');
+  const sandTop   = document.getElementById('sandTop');
+  const sandBottom= document.getElementById('sandBottom');
+
+  const minVal = document.getElementById('minVal');
+  const secVal = document.getElementById('secVal');
+
+  let totalSeconds = 300;
+  let remaining = 300;
+  let running = false;
+  let endTime = null;
+  let rafId = null;
+  let audioCtx = null;
+
+  function clampCustom(){
+    let m = parseInt(minVal.textContent, 10);
+    let s = parseInt(secVal.textContent, 10);
+    m = Math.max(0, Math.min(60, m));
+    s = Math.max(0, Math.min(55, s));
+    minVal.textContent = m;
+    secVal.textContent = s;
+    return m*60 + s;
+  }
+
+  function setTotalFromCustom(){
+    const t = clampCustom();
+    if(t <= 0) return;
+    totalSeconds = t;
+    remaining = t;
+    updateReadout();
+    updateGlass(0);
+    deselectPresets();
+  }
+
+  function deselectPresets(){
+    [...presets.children].forEach(c => c.classList.remove('selected'));
+  }
+
+  document.getElementById('minUp').addEventListener('click', () => { if(running) return; minVal.textContent = Math.min(60, parseInt(minVal.textContent,10)+1); setTotalFromCustom(); });
+  document.getElementById('minDown').addEventListener('click', () => { if(running) return; minVal.textContent = Math.max(0, parseInt(minVal.textContent,10)-1); setTotalFromCustom(); });
+  document.getElementById('secUp').addEventListener('click', () => { if(running) return; let v = parseInt(secVal.textContent,10)+5; if(v>55) v=55; secVal.textContent = v; setTotalFromCustom(); });
+  document.getElementById('secDown').addEventListener('click', () => { if(running) return; let v = parseInt(secVal.textContent,10)-5; if(v<0) v=0; secVal.textContent = v; setTotalFromCustom(); });
+
+  presets.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if(!btn || running) return;
+    deselectPresets();
+    btn.classList.add('selected');
+    const sec = parseInt(btn.dataset.sec, 10);
+    totalSeconds = sec;
+    remaining = sec;
+    minVal.textContent = Math.floor(sec/60);
+    secVal.textContent = sec%60;
+    updateReadout();
+    updateGlass(0);
+  });
+
+  function formatTime(s){
+    const m = Math.floor(s/60);
+    const sec = Math.floor(s%60);
+    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+
+  function updateReadout(){
+    readout.textContent = formatTime(Math.max(0, remaining));
+  }
+
+  function updateGlass(fracElapsed){
+    // top chamber: level moves from y=20 (full) to y=150 (empty)
+    const yLevel = 20 + fracElapsed * 130;
+    sandTop.setAttribute('y', yLevel);
+    sandTop.setAttribute('height', Math.max(0, 150 - yLevel));
+
+    // bottom chamber: level moves from y=280 (empty) to y=150 (full)
+    const yLevelBottom = 280 - fracElapsed * 130;
+    sandBottom.setAttribute('y', yLevelBottom);
+    sandBottom.setAttribute('height', Math.max(0, 280 - yLevelBottom));
+  }
+
+  function tick(){
+    if(!running) return;
+    const now = performance.now();
+    const msLeft = endTime - now;
+    remaining = Math.max(0, msLeft/1000);
+    const frac = 1 - (remaining/totalSeconds);
+    updateReadout();
+    updateGlass(Math.min(1, Math.max(0, frac)));
+
+    if(remaining <= 0){
+      finish();
+      return;
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function beep(){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const times = [0, 0.28, 0.56];
+      times.forEach((t) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 740;
+        gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + t + 0.24);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + t);
+        osc.stop(audioCtx.currentTime + t + 0.26);
+      });
+    }catch(e){ /* audio not available, silently skip */ }
+  }
+
+  function finish(){
+    running = false;
+    remaining = 0;
+    updateReadout();
+    updateGlass(1);
+    sandFall.style.opacity = 0;
+    glow.classList.add('active');
+    statusEl.textContent = 'Czas minął!';
+    startBtn.textContent = 'Start';
+    beep();
+  }
+
+  function start(){
+    if(remaining <= 0){
+      remaining = totalSeconds;
+    }
+    running = true;
+    endTime = performance.now() + remaining*1000;
+    glow.classList.remove('active');
+    sandFall.style.opacity = 1;
+    statusEl.textContent = 'W toku…';
+    startBtn.textContent = 'Pauza';
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function pause(){
+    running = false;
+    if(rafId) cancelAnimationFrame(rafId);
+    sandFall.style.opacity = 0;
+    statusEl.textContent = 'Pauza';
+    startBtn.textContent = 'Wznów';
+  }
+
+  startBtn.addEventListener('click', () => {
+    if(running){ pause(); } else { start(); }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    running = false;
+    if(rafId) cancelAnimationFrame(rafId);
+    remaining = totalSeconds;
+    updateReadout();
+    updateGlass(0);
+    sandFall.style.opacity = 0;
+    glow.classList.remove('active');
+    statusEl.textContent = 'Ustaw czas i naciśnij Start';
+    startBtn.textContent = 'Start';
+  });
+
+  // init
+  updateReadout();
+  updateGlass(0);
+})();
+</script>
+
+</body>
+</html>
